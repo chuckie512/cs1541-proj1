@@ -1,14 +1,10 @@
-/**************************************************************/
-/* CS/COE 1541				 			
-   just compile with gcc -o pipeline pipeline.c			
-   and execute using							
-   ./pipeline  /afs/cs.pitt.edu/courses/1541/short_traces/sample.tr	0  
-
- Joe Baker
- Charles Smith
- Project 1
- pipeline.c
- ***************************************************************/
+/*
+ * Joe Baker
+ * Charles Smith
+ * Project 1
+ *
+ * pipeline.c
+ */
 
 #include <stdio.h>
 #include <inttypes.h>

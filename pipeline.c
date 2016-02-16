@@ -110,19 +110,28 @@ void sim_ID_stage(pipeline_buffer* if_id, pipeline_buffer* id_ex)
     // 4. write control, registers, immediates to buffer
 }
 
-void sim_EX_stage()
+void sim_EX_stage(pipeline_buffer* id_ex, pipeline_buffer* ex_mem)
 {
-
+    // steps:
+    // 1. read buffer
+    // 2. alu
+    // 3. branch condition
+    // 4. write to buffer
 }
 
-void sim_MEM_stage()
+void sim_MEM_stage(pipeline_buffer* ex_mem, pipeline_buffer* mem_wb)
 {
-
+    // steps:
+    // 1. read buffer
+    // 2. read/write mem
+    // 3. write to buffer
 }
 
 void sim_WB_stage()
 {
-
+    // steps:
+    // 1. read buffer
+    // 2. write to register
 }
 
 

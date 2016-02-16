@@ -110,17 +110,32 @@ void sim_ID_stage(pipeline_buffer* if_id, pipeline_buffer* id_ex)
     // 4. write control, registers, immediates to buffer
 }
 
-void sim_EX_stage()
+void sim_EX_stage(pipeline_buffer* id_ex, pipeline_buffer* ex_mem)
 {
-
+    // steps:
+    // 1. read from buffer
+    // 2. alu
+    // 3. branch condition
+    // 4. write buffer
 }
 
-void sim_MEM_stage()
+void sim_MEM_stage(pipeline_buffer* ex_mem, pipeline_buffer* mem_wb)
 {
-
+    // steps:
+    // 1. read from buffer
+    // 2. read/write to mem
+    // 3. write buffer
 }
 
-void sim_WB_stage()
+void sim_WB_stage(pipeline_buffer* mem_wb)
+{
+    // steps:
+    // 1. read from buffer
+    // 2. write to register
+}
+
+//other helper methods
+void zero_buff(pipeline_buffer* buff)
 {
 
 }
@@ -159,10 +174,15 @@ int main(int argc, char **argv)
 
   /* 'Hardware' */
     // Pipeline Buffers. These are 'hardware' so we only need 1 instance of each
-    pipeline_buffer if_id__buffer = 0;
-    pipeline_buffer id_ex__buffer = 0;
-    pipeline_buffer ex_mem__buffer = 0;
-    pipeline_buffer mem_wb__buffer = 0;
+    pipeline_buffer if_id__buffer;
+    pipeline_buffer id_ex__buffer;
+    pipeline_buffer ex_mem__buffer;
+    pipeline_buffer mem_wb__buffer;
+
+    zero_buff(&if_id__buffer);
+    zero_buff(&id_ex__buffer);
+    zero_buff(&ex_mem__buffer);
+    zero_buff(&mem_wb__buffer);
 
     // Program counter...
     unsigned int pc = 0;
@@ -185,7 +205,16 @@ int main(int argc, char **argv)
     sim_IF_stage(&pc, tr_entry, &if_id__buffer);
 
     // ID Stage
-    sim_ID_stage(&if_id__buffer, &id_ex_buffer);
+    sim_ID_stage(&if_id__buffer, &id_ex__buffer);
+    
+    // EX Stage
+    sim_EX_stage(&id_ex__buffer, &ex_mem__buffer);
+
+    // MEM Stage
+    sim_MEM_stage(&ex_mem__buffer, &mem_wb__buffer);
+
+    //WB Stage
+    sim_WB_stage(&mem_wb__buffer);
 
  
    /* Branch Logic */

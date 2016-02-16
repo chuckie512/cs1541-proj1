@@ -1,6 +1,7 @@
 /*
  * Joe Baker
  * Charles Smith
+ * CS 1541
  * Project 1
  *
  * pipeline.c
@@ -84,6 +85,46 @@ int trace_get_item(struct trace_item **item)
   return 1;
 }
 
+/* Pipeline Stage Implementations
+ *
+ * Each stage of the pipeline is simulated by calling a function. The function
+ * is given the data from the previous stage's buffer, does what it is supposed to,
+ * and updates the buffer ahead of it.
+ */
+
+void sim_IF_stage(unsigned int pc, struct trace_item* inst, pipeline_buffer* if_id)
+{
+    // steps:
+    // 1. read pc
+    // 2. load instruction
+    // 3. increment pc
+    // 4. write pc, instruction data to buffer
+}
+
+void sim_ID_stage(pipeline_buffer* if_id, pipeline_buffer* id_ex)
+{
+    // steps:
+    // 1. read from buffer
+    // 2. read register values
+    // 3. decode instruction
+    // 4. write control, registers, immediates to buffer
+}
+
+void sim_EX_stage()
+{
+
+}
+
+void sim_MEM_stage()
+{
+
+}
+
+void sim_WB_stage()
+{
+
+}
+
 
 int main(int argc, char **argv)
 {
@@ -91,29 +132,24 @@ int main(int argc, char **argv)
   size_t size;
   char *trace_file_name;
   int trace_view_on = 0;
-  
-  unsigned char t_type = 0;
-  unsigned char t_sReg_a= 0;
-  unsigned char t_sReg_b= 0;
-  unsigned char t_dReg= 0;
-  unsigned int t_PC = 0;
-  unsigned int t_Addr = 0;
+  int branch_prediction_method = 0;
 
   unsigned int cycle_number = 0;
 
-  if (argc == 1) {
+  // Parse Inputs
+  if (argc != 4) {
     fprintf(stdout, "\nUSAGE: tv <trace_file> <switch - any character>\n");
     fprintf(stdout, "\n(switch) to turn on or off individual item view.\n\n");
     exit(0);
+  } else {
+    trace_file_name = argv[1];
+    trace_view_on = atoi(argv[2]);
+    branch_prediction_method = (atoi(argv[3] == 1)) : 1 ? 0;
   }
-    
-  trace_file_name = argv[1];
-  if (argc == 3) trace_view_on = atoi(argv[2]) ;
 
+  // Open the trace file.
   fprintf(stdout, "\n ** opening file %s\n", trace_file_name);
-
   trace_fd = fopen(trace_file_name, "rb");
-
   if (!trace_fd) {
     fprintf(stdout, "\ntrace file %s not opened.\n\n", trace_file_name);
     exit(0);
@@ -121,6 +157,16 @@ int main(int argc, char **argv)
 
   trace_init();
 
+  /* 'Hardware' */
+    // Pipeline Buffers. These are 'hardware' so we only need 1 instance of each
+    pipeline_buffer if_id__buffer = 0;
+    pipeline_buffer id_ex__buffer = 0;
+    pipeline_buffer ex_mem__buffer = 0;
+    pipeline_buffer mem_wb__buffer = 0;
+
+    // Program counter...
+    unsigned int pc = 0;
+  
   while(1) {
     size = trace_get_item(&tr_entry);
     if (!size) {       /* no more instructions (trace_items) to simulate */
@@ -129,18 +175,19 @@ int main(int argc, char **argv)
     }
     else{              /* parse the next instruction to simulate */
       cycle_number++;
-      t_type = tr_entry->type;
-      t_sReg_a = tr_entry->sReg_a;
-      t_sReg_b = tr_entry->sReg_b;
-      t_dReg = tr_entry->dReg;
-      t_PC = tr_entry->PC;
-      t_Addr = tr_entry->Addr;
     }
 
    /* Stalling Mechanism */
 
    /* Happy-path Pipeline */
 
+    // IF Stage
+    sim_IF_stage(&pc, tr_entry, &if_id__buffer);
+
+    // ID Stage
+    sim_ID_stage(&if_id__buffer, &id_ex_buffer);
+
+ 
    /* Branch Logic */
 
    /* Forwarding Mechanism */

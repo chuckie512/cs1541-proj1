@@ -25,6 +25,7 @@ static struct trace_item *trace_buf;
 // Represents a buffer between two pipelined stages. Holds control info and data.
 typedef struct {
     // put stuffs in here
+    struct trace_item * instruction;
 } pipeline_buffer;
 
 

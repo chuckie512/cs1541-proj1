@@ -14,6 +14,9 @@
 
 #define TRACE_BUFSIZE 1024*1024
 
+//set to 0 to disable debug prints
+#define DEBUG 1
+
 static FILE *trace_fd;
 static int trace_buf_ptr;
 static int trace_buf_end;
@@ -84,6 +87,16 @@ int trace_get_item(struct trace_item **item)
 
   return 1;
 }
+
+
+
+void debug_print(char * str){
+  if(DEBUG>0){
+    printf("%s\n",str);
+  }
+}
+
+
 
 /* Pipeline Stage Implementations
  *
@@ -197,9 +210,28 @@ int main(int argc, char **argv)
       cycle_number++;
     }
 
+    //if NOT STALL
+    //  read trace
+    //else
+    //  squash
+
    /* Stalling Mechanism */
 
+   //if instruction in IF is a branch and the next instruciton isn't PC+4
+   //we're squashing things
+   //this is also going to be looking at the branch prediction here.
+   //
+   //if PC != PC+4
+   //  look at branch prediction
+   //  squash or predict
+
    /* Happy-path Pipeline */
+
+  
+    // so we went about this wrong at first
+    // each stage is not actually calculating anything, just tracing
+    // so have a debug print of what's in them, but don't worry about the alu
+
 
     // IF Stage
     sim_IF_stage(&pc, tr_entry, &if_id__buffer);
@@ -216,10 +248,6 @@ int main(int argc, char **argv)
     //WB Stage
     sim_WB_stage(&mem_wb__buffer);
 
- 
-   /* Branch Logic */
-
-   /* Forwarding Mechanism */
 
     
     /* Not sure if we need this, or if we'll need to modify it. Just leaving here for now. */

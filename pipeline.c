@@ -194,7 +194,50 @@ int main(int argc, char **argv)
     zero_buf(&wb_stage);
   
   while(1) {
-    
+
+  /*
+   * We have 5 different things that can happen in the pipeline
+   * 1. Happy Path
+   * 2. Jump || JumpReg
+   * 3. Forwarding (specifically when we have an instruction that depends on a lw directly in front)
+   * 4. Branching with 'assume not taken'
+   * 5. Branching with 1-bit predictor
+   *
+   * Heres some pseudocode for what should happen in each case:
+   * 1. Happy Path
+   *    * print what finished
+   *    * shift instructions to the next stage
+   *    * load next instruction either from trace, or queue if it has stuff
+   * 2. Jump || JumpReg
+   *    * push id,if -> queue in respective order
+   *    * squash id,if (set each of those stages to 0);
+   *    * shift instructions to the next stage
+   *    * load next instruction either from trace or queue if non-empty
+   * 3. Forwarding
+   *    * if ( id stage depends on result of lw in ex )
+   *        * shift instructions ex..wb
+   *        * squash ex
+   *        * keep id,if the same, dont read new instruction from queue or trace, do not pass go, do not collect $200
+   * 4. Branching with assume NT
+   *    * if (id's PC != ex's PC + 4)
+   *        * push id,if -> queue in respective order
+   *        * squash id,if
+   *        * shift all instructions, and load new instruction from queue if non-empty, or trace
+   * 5. Branching with 1-bit
+   *    1 (needs to be done before step 2 here:
+   *        * if(ex is a branch instruction)
+   *            * if (local BTB value != result of ex)  --
+   *                * push id,if -> queue in respective order
+   *                * update BTB with result
+   *                * shift instructions and load new instruction from either queue or trace
+   *    2 (after 1...):
+   *        * if (IF is a branch instruction)
+   *            * if( branch dest address not in BTB)
+   *                * add branch dest address to BTB, and set its branch value to not taken
+   *                * set a local variable with as branch not taken
+   *            * else
+   *                * set a local variable with the branch taken value from BTB for this dest address
+   */
 
     //if NOT STALL
     //  read trace

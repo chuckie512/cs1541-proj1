@@ -22,13 +22,6 @@ static int trace_buf_ptr;
 static int trace_buf_end;
 static struct trace_item *trace_buf;
 
-// Represents a buffer between two pipelined stages. Holds control info and data.
-typedef struct {
-    // put stuffs in here
-    struct trace_item * instruction;
-} pipeline_buffer;
-
-
 /* Helpers to read from trace into trace buffer */
 
 int is_big_endian(void)
@@ -89,71 +82,61 @@ int trace_get_item(struct trace_item **item)
   return 1;
 }
 
-
-
 void debug_print(char * str){
   if(DEBUG>0){
-    printf("%s\n",str);
+    printf("%s\n", str);
   }
 }
 
-
-
-/* Pipeline Stage Implementations
- *
- * Each stage of the pipeline is simulated by calling a function. The function
- * is given the data from the previous stage's buffer, does what it is supposed to,
- * and updates the buffer ahead of it.
- */
-
-void sim_IF_stage(unsigned int pc, struct trace_item* inst, pipeline_buffer* if_id)
-{
-    // steps:
-    // 1. read pc
-    // 2. load instruction
-    // 3. increment pc
-    // 4. write pc, instruction data to buffer
-}
-
-void sim_ID_stage(pipeline_buffer* if_id, pipeline_buffer* id_ex)
-{
-    // steps:
-    // 1. read from buffer
-    // 2. read register values
-    // 3. decode instruction
-    // 4. write control, registers, immediates to buffer
-}
-
-void sim_EX_stage(pipeline_buffer* id_ex, pipeline_buffer* ex_mem)
-{
-    // steps:
-    // 1. read from buffer
-    // 2. alu
-    // 3. branch condition
-    // 4. write buffer
-}
-
-void sim_MEM_stage(pipeline_buffer* ex_mem, pipeline_buffer* mem_wb)
-{
-    // steps:
-    // 1. read from buffer
-    // 2. read/write to mem
-    // 3. write buffer
-}
-
-void sim_WB_stage(pipeline_buffer* mem_wb)
-{
-    // steps:
-    // 1. read from buffer
-    // 2. write to register
-}
-
 //other helper methods
-void zero_buff(pipeline_buffer* buff)
-{
-
+void zero_buf(struct trace_item* buf) {
+    memset(buf, 0, sizeof(struct trace_item));
 }
 
+print_finished_instruction(struct trace_item* inst, int cycle_number) {
+      switch(inst->type) {
+        case ti_NOP:
+          printf("[cycle %d] NOP:\n",cycle_number) ;
+          break;
+        case ti_RTYPE:
+          printf("[cycle %d] RTYPE:",cycle_number) ;
+          printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(dReg: %d) \n", inst->PC, inst->sReg_a, inst->sReg_b, inst->dReg);
+          break;
+        case ti_ITYPE:
+          printf("[cycle %d] ITYPE:",cycle_number) ;
+          printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", inst->PC, inst->sReg_a, inst->dReg, inst->Addr);
+          break;
+        case ti_LOAD:
+          printf("[cycle %d] LOAD:",cycle_number) ;      
+          printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", inst->PC, inst->sReg_a, inst->dReg, inst->Addr);
+          break;
+        case ti_STORE:
+          printf("[cycle %d] STORE:",cycle_number) ;      
+          printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", inst->PC, inst->sReg_a, inst->sReg_b, inst->Addr);
+          break;
+        case ti_BRANCH:
+          printf("[cycle %d] BRANCH:",cycle_number) ;
+          printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", inst->PC, inst->sReg_a, inst->sReg_b, inst->Addr);
+          break;
+        case ti_JTYPE:
+          printf("[cycle %d] JTYPE:",cycle_number) ;
+          printf(" (PC: %x)(addr: %x)\n", inst->PC,inst->Addr);
+          break;
+        case ti_SPECIAL:
+          printf("[cycle %d] SPECIAL:\n",cycle_number) ;      	
+          break;
+        case ti_JRTYPE:
+          printf("[cycle %d] JRTYPE:",cycle_number) ;
+          printf(" (PC: %x) (sReg_a: %d)(addr: %x)\n", inst->PC, inst->dReg, inst->Addr);
+          break;
+      }
+}
+
+int inst_queue_size = 0;
+struct trace_item get_queued_instruction() {
+    struct trace_item foo = {};
+    return foo;
+}
 
 int main(int argc, char **argv)
 {
@@ -162,18 +145,28 @@ int main(int argc, char **argv)
   char *trace_file_name;
   int trace_view_on = 0;
   int branch_prediction_method = 0;
-
   unsigned int cycle_number = 0;
 
   // Parse Inputs
   if (argc != 4) {
-    fprintf(stdout, "\nUSAGE: tv <trace_file> <switch - any character>\n");
-    fprintf(stdout, "\n(switch) to turn on or off individual item view.\n\n");
+    fprintf(stdout, "\nUSAGE: tv <trace_file> <switch - any character> <branch_prediction - 0|1>\n");
+    fprintf(stdout, "\n(switch) to turn on or off individual item view.\n");
+    fprintf(stdout, "(branch_prediction) sets the branch prediction method as \'assume not taken\' (0), or a 1-bit branch predictor (1)\n\n");
     exit(0);
   } else {
     trace_file_name = argv[1];
     trace_view_on = atoi(argv[2]);
-    branch_prediction_method = (atoi(argv[3] == 1)) : 1 ? 0;
+    branch_prediction_method = (atoi(argv[3]) == 1) ? 1 : 0;
+
+    // debug
+    char dbg_msg[200];
+    sprintf(dbg_msg,
+            "\n-debug- parsed inputs. file=%s, view_trace=%d, branch_pred=%d\n",
+            trace_file_name,
+            (trace_view_on == 0) ? 0 : 1,
+            (branch_prediction_method == 0) ? 0 : 1
+           );
+    debug_print(dbg_msg);
   }
 
   // Open the trace file.
@@ -186,30 +179,22 @@ int main(int argc, char **argv)
 
   trace_init();
 
-  /* 'Hardware' */
-    // Pipeline Buffers. These are 'hardware' so we only need 1 instance of each
-    pipeline_buffer if_id__buffer;
-    pipeline_buffer id_ex__buffer;
-    pipeline_buffer ex_mem__buffer;
-    pipeline_buffer mem_wb__buffer;
-
-    zero_buff(&if_id__buffer);
-    zero_buff(&id_ex__buffer);
-    zero_buff(&ex_mem__buffer);
-    zero_buff(&mem_wb__buffer);
-
-    // Program counter...
-    unsigned int pc = 0;
+  // store what instruction is in each stage of the pipeline (can be no-ops)
+    struct trace_item new_instruction;
+    struct trace_item if_stage;
+    struct trace_item id_stage;
+    struct trace_item ex_stage;
+    struct trace_item mem_stage;
+    struct trace_item wb_stage;
+    zero_buf(&new_instruction);
+    zero_buf(&if_stage);
+    zero_buf(&id_stage);
+    zero_buf(&ex_stage);
+    zero_buf(&mem_stage);
+    zero_buf(&wb_stage);
   
   while(1) {
-    size = trace_get_item(&tr_entry);
-    if (!size) {       /* no more instructions (trace_items) to simulate */
-      printf("+ Simulation terminates at cycle : %u\n", cycle_number);
-      break;
-    }
-    else{              /* parse the next instruction to simulate */
-      cycle_number++;
-    }
+    
 
     //if NOT STALL
     //  read trace
@@ -226,71 +211,40 @@ int main(int argc, char **argv)
    //  look at branch prediction
    //  squash or predict
 
+    // the next instruction will either be what we read from the trace,
+    // or it will be one of the instructions following a branch.
+    // if it's from the branch, we will get the instruction from our
+    // queue of instructions that were backed up from a branch
+    if (inst_queue_size == 0) {
+        size = trace_get_item(&tr_entry);
+        if (!size) {       /* no more instructions (trace_items) to simulate */
+            printf("+ Simulation terminates at cycle : %u\n", cycle_number);
+            break;
+        }
+        new_instruction = *tr_entry;
+    }
+    else {
+        new_instruction = get_queued_instruction();
+    }
+    cycle_number++;
+    
    /* Happy-path Pipeline */
+    // in the happy case, everything moves down the pipeline
+    if(trace_view_on) {
+        print_finished_instruction(&wb_stage, cycle_number);
+    }
+    wb_stage = mem_stage;
+    mem_stage = ex_stage;
+    ex_stage = id_stage;
+    id_stage = if_stage;
+    if_stage = new_instruction;
 
-  
     // so we went about this wrong at first
     // each stage is not actually calculating anything, just tracing
     // so have a debug print of what's in them, but don't worry about the alu
-
-
-    // IF Stage
-    sim_IF_stage(&pc, tr_entry, &if_id__buffer);
-
-    // ID Stage
-    sim_ID_stage(&if_id__buffer, &id_ex__buffer);
-    
-    // EX Stage
-    sim_EX_stage(&id_ex__buffer, &ex_mem__buffer);
-
-    // MEM Stage
-    sim_MEM_stage(&ex_mem__buffer, &mem_wb__buffer);
-
-    //WB Stage
-    sim_WB_stage(&mem_wb__buffer);
-
-
     
     /* Not sure if we need this, or if we'll need to modify it. Just leaving here for now. */
-    if (trace_view_on) {/* print the executed instruction if trace_view_on=1 */
-      switch(tr_entry->type) {
-        case ti_NOP:
-          printf("[cycle %d] NOP:",cycle_number) ;
-          break;
-        case ti_RTYPE:
-          printf("[cycle %d] RTYPE:",cycle_number) ;
-          printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(dReg: %d) \n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->dReg);
-          break;
-        case ti_ITYPE:
-          printf("[cycle %d] ITYPE:",cycle_number) ;
-          printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->dReg, tr_entry->Addr);
-          break;
-        case ti_LOAD:
-          printf("[cycle %d] LOAD:",cycle_number) ;      
-          printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->dReg, tr_entry->Addr);
-          break;
-        case ti_STORE:
-          printf("[cycle %d] STORE:",cycle_number) ;      
-          printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->Addr);
-          break;
-        case ti_BRANCH:
-          printf("[cycle %d] BRANCH:",cycle_number) ;
-          printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", tr_entry->PC, tr_entry->sReg_a, tr_entry->sReg_b, tr_entry->Addr);
-          break;
-        case ti_JTYPE:
-          printf("[cycle %d] JTYPE:",cycle_number) ;
-          printf(" (PC: %x)(addr: %x)\n", tr_entry->PC,tr_entry->Addr);
-          break;
-        case ti_SPECIAL:
-          printf("[cycle %d] SPECIAL:",cycle_number) ;      	
-          break;
-        case ti_JRTYPE:
-          printf("[cycle %d] JRTYPE:",cycle_number) ;
-          printf(" (PC: %x) (sReg_a: %d)(addr: %x)\n", tr_entry->PC, tr_entry->dReg, tr_entry->Addr);
-          break;
-      }
-    }
-  }
+     }
 
   trace_uninit();
 

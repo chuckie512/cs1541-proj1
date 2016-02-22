@@ -345,11 +345,13 @@ int main(int argc, char **argv)
             if(get_btb_value(ex_stage.PC) == 1){ //predict taken
                 hazard = 2; //branch
                 debug_print("[HAZARD] predicted taken when not taken\n");
+                set_btb_value(ex_stage.PC, 0);
             }
         }
         else{ //taken
             if(get_btb_value(ex_stage.PC) == 0){ //predict not taken
                 hazard = 2; //branch
+                set_btb_value(ex_stage.PC, 1);
                 debug_print("[HAZARD] predicted not taken when taken\n");
             }
         }

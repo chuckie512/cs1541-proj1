@@ -382,25 +382,47 @@ int main(int argc, char **argv)
 	if(!squash){
 		int issuetwo = 0;
 		int issueone = 0;
-	    if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) && (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)  ) || 
-                ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) && (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE) )) {
-		if(if_id_stage.older.type != ti_BRANCH) {
-			if(!((if_id_stage.newer.dReg == if_id_stage.older.sReg_a || if_id_stage.newer.dReg == if_id_stage.older.sReg_b)||
-			      if_id_stage.older.dReg == if_id_stage.newer.sReg_a || if_id_stage.older.dReg == if_id_stage.newer.sReg_b  )){
-				if(reg2_stage.type == ti_LOAD &&
-				   (reg2_stage.dReg != if_id_stage.newer.sReg_a && reg2_stage.dReg != if_id_stage.newer.sReg_b &&
-				    reg2_stage.dReg != if_id_stage.older.sReg_a && reg2_stage.dReg != if_id_stage.older.sReg_b )){
-					issuetwo = 1;
-				}
-			}
-		}	
-	    }
-            else if( reg2_stage.type != ti_LOAD ||
-		    (if_id_stage.older.sReg_a != reg2_stage.dReg &&
-		     if_id_stage.older.sReg_b != reg2_stage.dReg )){
-                issueone = 1;
-	    }
+	    
 
+
+
+
+            //logic
+//            if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) && 
+//                 (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)  ) || 
+//                ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) && 
+//                 (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE) )) {
+//		if(if_id_stage.older.type != ti_BRANCH) {
+//			if(!((if_id_stage.newer.dReg == if_id_stage.older.sReg_a || if_id_stage.newer.dReg == if_id_stage.older.sReg_b)||
+//			      if_id_stage.older.dReg == if_id_stage.newer.sReg_a || if_id_stage.older.dReg == if_id_stage.newer.sReg_b  )){
+//				if(reg2_stage.type == ti_LOAD &&
+//				   (reg2_stage.dReg != if_id_stage.newer.sReg_a && reg2_stage.dReg != if_id_stage.newer.sReg_b &&
+//				    reg2_stage.dReg != if_id_stage.older.sReg_a && reg2_stage.dReg != if_id_stage.older.sReg_b )){
+//					issuetwo = 1;
+//				}
+//			}
+//		}	
+//	    }
+//            else if( reg2_stage.type != ti_LOAD ||
+//		    (if_id_stage.older.sReg_a != reg2_stage.dReg &&
+//		     if_id_stage.older.sReg_b != reg2_stage.dReg )){
+//                issueone = 1;
+//	    }
+            
+
+
+	    int no_old_lw_depend = 0;
+            int is_depend        = 0;
+            int no_lw_depend     = 0;
+            int older_not_branch = 0;
+            int one_of_each_inst = 0;
+            
+            
+
+
+
+
+            //issues
 	    if(issuetwo){
                 debug_print("issue two");
                 if(if_id_stage.newer.type == ti_LOAD ||

@@ -417,11 +417,55 @@ int main(int argc, char **argv)
             int older_not_branch = 0;
             int one_of_each_inst = 0;
             
+            //older_not_branch
+            if(if_id_stage.older.type != ti_BRANCH){
+                older_not_branch = 1;
+                //debug_print("older_not_branch");
+            }
+
+            //no_old_lw_depend
+            if(reg2_stage.dReg != if_id_stage.newer.sReg_a &&
+               reg2_stage.dReg != if_id_stage.newer.sReg_b){
+                no_old_lw_depend = 1;
+                //debug_print("no_old_lw_depend");
+            }
+                
+            //no_lw_depend
+            if(no_old_lw_depend &&
+               reg2_stage.dReg != if_id_stage.newer.sReg_a &&
+               reg2_stage.dReg != if_id_stage.newer.sReg_b){
+                no_lw_depend = 1;
+                //debug_print("no_lw_depend");
+            }
+
+            //is_depend
+            if(if_id_stage.newer.dReg == if_id_stage.older.sReg_a ||
+               if_id_stage.newer.dReg == if_id_stage.older.sReg_b ||
+               if_id_stage.older.dReg == if_id_stage.newer.sReg_a ||
+               if_id_stage.older.dReg == if_id_stage.newer.sReg_b){
+                is_depend = 1;
+                //debug_print("is_depend");
+            }
+
+            //one_of_each_inst
+            if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) &&
+                 (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)) ||
+                ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) &&
+                 (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE)) ){
+                one_of_each_inst = 1;
+                //debug_print("one_of_each_inst"); 
+            }
+
             
-
-
-
-
+            //issue two
+            if(!is_depend && no_lw_depend && older_not_branch && one_of_each_inst){
+                issuetwo = 1;
+            }
+            //issue one
+            if(no_old_lw_depend){
+                issueone = 1;
+            }
+              
             //issues
 	    if(issuetwo){
                 debug_print("issue two");

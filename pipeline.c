@@ -81,7 +81,7 @@ void trace_uninit()
   fclose(trace_fd);
 }
 
-int trace_get_item(struct trace_item **item)
+int trace_get_item(struct trace_item *item)
 {
   int n_items;
 
@@ -92,13 +92,13 @@ int trace_get_item(struct trace_item **item)
     trace_buf_ptr = 0;
     trace_buf_end = n_items;			/* n_items were read and placed in trace buffer */
   }
-
-  *item = &trace_buf[trace_buf_ptr];	/* read a new trace item for processing */
+  struct trace_item* temp = &trace_buf[trace_buf_ptr];	/* read a new trace item for processing */
+  *item = *temp;
   trace_buf_ptr++;
   
   if (is_big_endian()) {
-    (*item)->PC = my_ntohl((*item)->PC);
-    (*item)->Addr = my_ntohl((*item)->Addr);
+    item->PC = my_ntohl(temp->PC);
+    item->Addr = my_ntohl(temp->Addr);
   }
 
   return 1;
@@ -131,7 +131,7 @@ int read_instruction(struct trace_item* instruction) {
     // if it's from the branch, we will get the instruction from our
     // queue of instructions that were backed up from a branch
     if (inst_queue_size == 0) {
-        if (trace_get_item(&instruction)) {       /* no more instructions (trace_items) to simulate */
+        if (!trace_get_item(instruction)) {       /* no more instructions (trace_items) to simulate */
             return 0;
         }
     }

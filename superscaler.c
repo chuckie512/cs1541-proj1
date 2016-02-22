@@ -382,26 +382,93 @@ int main(int argc, char **argv)
 	if(!squash){
 		int issuetwo = 0;
 		int issueone = 0;
-	    if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) && (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)  ) || 
-                ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) && (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE) )) {
-		if(if_id_stage.older.type != ti_BRANCH) {
-			if(!((if_id_stage.newer.dReg == if_id_stage.older.sReg_a || if_id_stage.newer.dReg == if_id_stage.older.sReg_b)||
-			      if_id_stage.older.dReg == if_id_stage.newer.sReg_a || if_id_stage.older.dReg == if_id_stage.newer.sReg_b  )){
-				if(reg2_stage.type == ti_LOAD &&
-				   (reg2_stage.dReg != if_id_stage.newer.sReg_a && reg2_stage.dReg != if_id_stage.newer.sReg_b &&
-				    reg2_stage.dReg != if_id_stage.older.sReg_a && reg2_stage.dReg != if_id_stage.older.sReg_b )){
-					issuetwo = 1;
-				}
-			}
-		}	
-	    }
-            else if( reg2_stage.type != ti_LOAD ||
-		    (if_id_stage.older.sReg_a != reg2_stage.dReg &&
-		     if_id_stage.older.sReg_b != reg2_stage.dReg )){
-                issueone = 1;
-	    }
+	    
 
+
+
+
+            //logic
+//            if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) && 
+//                 (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)  ) || 
+//                ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) && 
+//                 (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE) )) {
+//		if(if_id_stage.older.type != ti_BRANCH) {
+//			if(!((if_id_stage.newer.dReg == if_id_stage.older.sReg_a || if_id_stage.newer.dReg == if_id_stage.older.sReg_b)||
+//			      if_id_stage.older.dReg == if_id_stage.newer.sReg_a || if_id_stage.older.dReg == if_id_stage.newer.sReg_b  )){
+//				if(reg2_stage.type == ti_LOAD &&
+//				   (reg2_stage.dReg != if_id_stage.newer.sReg_a && reg2_stage.dReg != if_id_stage.newer.sReg_b &&
+//				    reg2_stage.dReg != if_id_stage.older.sReg_a && reg2_stage.dReg != if_id_stage.older.sReg_b )){
+//					issuetwo = 1;
+//				}
+//			}
+//		}	
+//	    }
+//            else if( reg2_stage.type != ti_LOAD ||
+//		    (if_id_stage.older.sReg_a != reg2_stage.dReg &&
+//		     if_id_stage.older.sReg_b != reg2_stage.dReg )){
+//                issueone = 1;
+//	    }
+            
+
+
+	    int no_old_lw_depend = 0;
+            int is_depend        = 0;
+            int no_lw_depend     = 0;
+            int older_not_branch = 0;
+            int one_of_each_inst = 0;
+            
+            //older_not_branch
+            if(if_id_stage.older.type != ti_BRANCH){
+                older_not_branch = 1;
+                //debug_print("older_not_branch");
+            }
+
+            //no_old_lw_depend
+            if(reg2_stage.dReg != if_id_stage.newer.sReg_a &&
+               reg2_stage.dReg != if_id_stage.newer.sReg_b){
+                no_old_lw_depend = 1;
+                //debug_print("no_old_lw_depend");
+            }
+                
+            //no_lw_depend
+            if(no_old_lw_depend &&
+               reg2_stage.dReg != if_id_stage.newer.sReg_a &&
+               reg2_stage.dReg != if_id_stage.newer.sReg_b){
+                no_lw_depend = 1;
+                //debug_print("no_lw_depend");
+            }
+
+            //is_depend
+            if(if_id_stage.newer.dReg == if_id_stage.older.sReg_a ||
+               if_id_stage.newer.dReg == if_id_stage.older.sReg_b ||
+               if_id_stage.older.dReg == if_id_stage.newer.sReg_a ||
+               if_id_stage.older.dReg == if_id_stage.newer.sReg_b){
+                is_depend = 1;
+                //debug_print("is_depend");
+            }
+
+            //one_of_each_inst
+            if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) &&
+                 (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)) ||
+                ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) &&
+                 (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE)) ){
+                one_of_each_inst = 1;
+                //debug_print("one_of_each_inst"); 
+            }
+
+            
+            //issue two
+            if(!is_depend && no_lw_depend && older_not_branch && one_of_each_inst){
+                issuetwo = 1;
+            }
+            //issue one
+            if(no_old_lw_depend){
+                issueone = 1;
+            }
+              
+            //issues
 	    if(issuetwo){
+                debug_print("issue two");
                 if(if_id_stage.newer.type == ti_LOAD ||
 		   if_id_stage.newer.type == ti_STORE){
                     reg2_stage = if_id_stage.newer;
@@ -413,6 +480,7 @@ int main(int argc, char **argv)
 		}
 		if_id_buf_size -= 2;
   	    } else if(issueone){
+                debug_print("issue one");
 		if(if_id_stage.older.type == ti_LOAD ||
 	           if_id_stage.older.type == ti_STORE){
                     reg2_stage = if_id_stage.older;
@@ -426,6 +494,7 @@ int main(int argc, char **argv)
 		if_id_buf_size -= 1;
 		
 	    } else{
+                debug_print("issue zero");
                 zero_buf(&reg1_stage, sizeof(reg1_stage));
 		zero_buf(&reg2_stage, sizeof(reg2_stage));
 	    }

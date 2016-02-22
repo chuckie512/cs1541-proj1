@@ -112,6 +112,8 @@ void debug_print(char * str){
     }
 }
 
+int if_id_buf_size = 0;
+
 typedef struct inst_buffer {
     struct trace_item older;
     struct trace_item newer;
@@ -125,6 +127,7 @@ typedef struct queue_entry {
 queue_entry* queue_start = 0;
 queue_entry* queue_end   = 0;
 int inst_queue_size = 0;
+int trace_nonempty = 1;
 
 //other helper methods
 void zero_buf(void* buf, int size) {
@@ -139,14 +142,15 @@ int read_instruction(struct trace_item* instruction) {
     // queue of instructions that were backed up from a branch
     if (inst_queue_size == 0) {
         if (!trace_get_item(instruction)) {       /* no more instructions (trace_items) to simulate */
+            trace_nonempty = 0;
             return 0;
         }
     }
-    //else {
-      //  if(!get_queued_instruction(instruction)) {
-        //    return 0;
-        //}
-    //}
+    else {
+        if(!get_queued_instruction(instruction)) {
+            return 0;
+        }
+    }
     return 1;
 
 }
@@ -280,8 +284,7 @@ int main(int argc, char **argv)
 
     memset(&btb_table, 0, sizeof(short) * BTB_ENTRIES);
 
-    int instructions_left = 5;  
-    while(instructions_left) {
+    while(trace_nonempty || inst_queue_size || if_id_buf_size) {
 
         cycle_number++;
 
@@ -294,6 +297,9 @@ int main(int argc, char **argv)
         wb2_stage = mem2_stage;
         mem1_stage = ex1_stage;
         mem2_stage = ex1_stage;
+
+
+
 
         //detect
         short squash = 0;
@@ -365,10 +371,33 @@ int main(int argc, char **argv)
             }
         }
 
+
         // step 5.5: reg -> ex
         ex1_stage = reg1_stage;
         ex2_stage = reg2_stage;
+        
+        /* ISSUE */
 
+        /* Read new instructions */
+        if(if_id_buf_size == 1) {
+            if_id_stage.older = if_id_stage.newer;
+            struct trace_item temp = {};
+            if(read_instruction(&temp)) {
+                if_id_stage.newer = temp;
+                if_id_buf_size = 2;
+            }
+        }
+        else if(if_id_buf_size == 0) {
+            struct trace_item temp = {};
+            if(read_instruction(&temp)) {
+                if_id_buf_size = 1;
+                if_id_stage.older = temp;
+                if(read_instruction(&temp)) {
+                    if_id_stage.newer = temp;
+                    if_id_buf_size = 2;
+                }
+            }
+        }
     }
 
     printf("+ Simulation terminates at cycle : %u\n", cycle_number); 

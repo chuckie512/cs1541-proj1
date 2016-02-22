@@ -473,10 +473,18 @@ int main(int argc, char **argv)
 		   if_id_stage.newer.type == ti_STORE){
                     reg2_stage = if_id_stage.newer;
 		    reg1_stage = if_id_stage.older;
+                    zero_buf(&if_id_stage.newer, sizeof(if_id_stage.newer));
+                    zero_buf(&if_id_stage.older, sizeof(if_id_stage.older));
 		}
 		else{
                     reg2_stage = if_id_stage.older;
 		    reg1_stage = if_id_stage.newer;
+                    if(if_id_stage.older.type != ti_LOAD ||
+                       if_id_stage.older.type != ti_STORE){
+                        debug_print("this shouldn't happen, look at one_of_each");
+                    }
+                    zero_buf(&if_id_stage.older, sizeof(if_id_stage.older));
+                    zero_buf(&if_id_stage.newer, sizeof(if_id_stage.newer));
 		}
 		if_id_buf_size -= 2;
   	    } else if(issueone){

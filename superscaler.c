@@ -369,6 +369,7 @@ int main(int argc, char **argv)
                 add_queued_instruction(&if_id_stage.newer);
                 zero_buf(&if_id_stage.newer, sizeof(if_id_stage.newer));
             }
+	    if_id_buf_size = 0;
         }
 
 
@@ -377,7 +378,62 @@ int main(int argc, char **argv)
         ex2_stage = reg2_stage;
         
         /* ISSUE */
+        
+	if(!squash){
+		int issuetwo = 0;
+		int issueone = 0;
+	    if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) && (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)  ) || 
+                ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) && (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE) )) {
+		if(if_id_stage.older.type != ti_BRANCH) {
+			if(!((if_id_stage.newer.dReg == if_id_stage.older.sReg_a || if_id_stage.newer.dReg == if_id_stage.older.sReg_b)||
+			      if_id_stage.older.dReg == if_id_stage.newer.sReg_a || if_id_stage.older.dReg == if_id_stage.newer.sReg_b  )){
+				if(reg2_stage.type == ti_LOAD &&
+				   (reg2_stage.dReg != if_id_stage.newer.sReg_a && reg2_stage.dReg != if_id_stage.newer.sReg_b &&
+				    reg2_stage.dReg != if_id_stage.older.sReg_a && reg2_stage.dReg != if_id_stage.older.sReg_b )){
+					issuetwo = 1;
+				}
+			}
+		}	
+	    }
+            else if( reg2_stage.type != ti_LOAD ||
+		    (if_id_stage.older.sReg_a != reg2_stage.dReg &&
+		     if_id_stage.older.sReg_b != reg2_stage.dReg )){
+                issueone = 1;
+	    }
 
+	    if(issuetwo){
+                if(if_id_stage.newer.type == ti_LOAD ||
+		   if_id_stage.newer.type == ti_STORE){
+                    reg2_stage = if_id_stage.newer;
+		    reg1_stage = if_id_stage.older;
+		}
+		else{
+                    reg2_stage = if_id_stage.older;
+		    reg1_stage = if_id_stage.newer;
+		}
+		if_id_buf_size -= 2;
+  	    } else if(issueone){
+		if(if_id_stage.older.type == ti_LOAD ||
+	           if_id_stage.older.type == ti_STORE){
+                    reg2_stage = if_id_stage.older;
+		    zero_buf(&reg1_stage, sizeof(reg1_stage));
+		}
+		else{
+                    reg1_stage = if_id_stage.older;
+		    zero_buf(&reg2_stage, sizeof(reg2_stage));
+		}
+	        if_id_stage.older = if_id_stage.newer;
+		if_id_buf_size -= 1;
+		
+	    } else{
+                zero_buf(&reg1_stage, sizeof(reg1_stage));
+		zero_buf(&reg2_stage, sizeof(reg2_stage));
+	    }
+	
+
+
+	}
+        
         /* Read new instructions */
         if(if_id_buf_size == 1) {
             if_id_stage.older = if_id_stage.newer;

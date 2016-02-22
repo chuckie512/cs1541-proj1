@@ -155,40 +155,46 @@ int read_instruction(struct trace_item* instruction) {
 
 }
 
-print_finished_instruction(struct trace_item* inst, int cycle_number) {
+print_finished_instruction(struct trace_item* inst, int cycle_number, int alu_or_mem) {
+    if(alu_or_mem) {
+        printf("[cycle %d | not mem] ");
+    }
+    else {
+        printf("[cycle %d |     mem] ");
+    }
     switch(inst->type) {
         case ti_NOP:
-            printf("[cycle %d] NOP:\n",cycle_number) ;
+            printf("NOP:\n",cycle_number) ;
             break;
         case ti_RTYPE:
-            printf("[cycle %d] RTYPE:",cycle_number) ;
+            printf("RTYPE:",cycle_number) ;
             printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(dReg: %d) \n", inst->PC, inst->sReg_a, inst->sReg_b, inst->dReg);
             break;
         case ti_ITYPE:
-            printf("[cycle %d] ITYPE:",cycle_number) ;
+            printf("ITYPE:",cycle_number) ;
             printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", inst->PC, inst->sReg_a, inst->dReg, inst->Addr);
             break;
         case ti_LOAD:
-            printf("[cycle %d] LOAD:",cycle_number) ;      
+            printf("LOAD:",cycle_number) ;      
             printf(" (PC: %x)(sReg_a: %d)(dReg: %d)(addr: %x)\n", inst->PC, inst->sReg_a, inst->dReg, inst->Addr);
             break;
         case ti_STORE:
-            printf("[cycle %d] STORE:",cycle_number) ;      
+            printf("STORE:",cycle_number) ;      
             printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", inst->PC, inst->sReg_a, inst->sReg_b, inst->Addr);
             break;
         case ti_BRANCH:
-            printf("[cycle %d] BRANCH:",cycle_number) ;
+            printf("BRANCH:",cycle_number) ;
             printf(" (PC: %x)(sReg_a: %d)(sReg_b: %d)(addr: %x)\n", inst->PC, inst->sReg_a, inst->sReg_b, inst->Addr);
             break;
         case ti_JTYPE:
-            printf("[cycle %d] JTYPE:",cycle_number) ;
+            printf("JTYPE:",cycle_number) ;
             printf(" (PC: %x)(addr: %x)\n", inst->PC,inst->Addr);
             break;
         case ti_SPECIAL:
-            printf("[cycle %d] SPECIAL:\n",cycle_number) ;      	
+            printf("SPECIAL:\n",cycle_number) ;      	
             break;
         case ti_JRTYPE:
-            printf("[cycle %d] JRTYPE:",cycle_number) ;
+            printf("JRTYPE:",cycle_number) ;
             printf(" (PC: %x) (sReg_a: %d)(addr: %x)\n", inst->PC, inst->dReg, inst->Addr);
             break;
     }
@@ -289,8 +295,8 @@ int main(int argc, char **argv)
         cycle_number++;
 
         if(trace_view_on) { 
-            print_finished_instruction(&wb1_stage, cycle_number);
-            print_finished_instruction(&wb2_stage, cycle_number);
+            print_finished_instruction(&wb1_stage, cycle_number, 1);
+            print_finished_instruction(&wb2_stage, cycle_number, 0);
         }
 
         wb1_stage = mem1_stage;

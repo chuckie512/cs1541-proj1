@@ -324,8 +324,10 @@ int main(int argc, char **argv)
      
 
     cycle_number++;
- 
-    print_finished_instruction(&wb_stage, cycle_number);
+
+    if(trace_view_on) { 
+        print_finished_instruction(&wb_stage, cycle_number);
+    }
 
     int hazard = 0;
     
@@ -522,6 +524,8 @@ int main(int argc, char **argv)
     
     /* Not sure if we need this, or if we'll need to modify it. Just leaving here for now. */
      }
+
+    printf("+ Simulation terminates at cycle : %u\n", cycle_number); 
 
   trace_uninit();
 

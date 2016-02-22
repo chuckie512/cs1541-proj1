@@ -272,20 +272,13 @@ int main(int argc, char **argv)
    *                * set a local variable with the branch taken value from BTB for this dest address
    */
 
-    //if NOT STALL
-    //  read trace
-    //else
-    //  squash
 
-   /* Stalling Mechanism */
-
-   //if instruction in IF is a branch and the next instruciton isn't PC+4
-   //we're squashing things
-   //this is also going to be looking at the branch prediction here.
-   //
-   //if PC != PC+4
-   //  look at branch prediction
-   //  squash or predict
+      /*
+       * Steps in simulation:
+       * 1. Detect which case we're in
+       * 2. Run that case
+       */
+      
 
   {
     // the next instruction will either be what we read from the trace,
@@ -352,6 +345,7 @@ int main(int argc, char **argv)
         mem_stage = ex_stage;
         zero_buf(&ex_stage);
     }
+    cycle_number++;
   }
   
     /* Branching with assume not taken */
@@ -368,6 +362,7 @@ int main(int argc, char **argv)
         id_stage = if_stage;
         if_stage = new_instruction;
     }
+    cycle_number++;
   }
   
     /* Branching with 1-bit predictor */
@@ -395,6 +390,7 @@ int main(int argc, char **argv)
 
         }
     }
+    cycle_number++;
   }
     // so we went about this wrong at first
     // each stage is not actually calculating anything, just tracing

@@ -118,7 +118,7 @@ typedef struct inst_buffer {
 } inst_buffer;
 
 typedef struct queue_entry {
-    inst_buffer entry;
+    trace_item entry;
     struct queue_entry* next;
     struct queue_entry* prev;
 } queue_entry;
@@ -190,7 +190,7 @@ print_finished_instruction(struct trace_item* inst, int cycle_number) {
     }
 }
 
-void add_queued_instruction(inst_buffer* inst) {
+void add_queued_instruction(struct trace_item* inst) {
     queue_entry* new_entry = (queue_entry*) malloc(sizeof(queue_entry));
     new_entry->entry = *inst;
     new_entry->next = queue_start;
@@ -206,7 +206,7 @@ void add_queued_instruction(inst_buffer* inst) {
     inst_queue_size++;
 }
 
-int get_queued_instruction(inst_buffer* inst) {
+int get_queued_instruction(struct trace_item* inst) {
     if(queue_end == NULL) {
         return 0;
     }

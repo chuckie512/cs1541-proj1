@@ -296,7 +296,7 @@ int main(int argc, char **argv)
         wb1_stage = mem1_stage;
         wb2_stage = mem2_stage;
         mem1_stage = ex1_stage;
-        mem2_stage = ex1_stage;
+        mem2_stage = ex2_stage;
 
 
 
@@ -337,6 +337,7 @@ int main(int argc, char **argv)
 
         }
         if(squash == 1){
+            debug_print("SQUASH");
             if(reg1_stage.type != ti_NOP){
                 if(reg2_stage.type != ti_NOP){
                     if(reg1_stage.PC<reg2_stage.PC){
@@ -409,7 +410,10 @@ int main(int argc, char **argv)
 //                issueone = 1;
 //	    }
             
-
+            if(if_id_stage.newer.type != ti_NOP)
+                debug_print("newer not NOP");
+            if(if_id_stage.older.type != ti_NOP)
+                debug_print("older not NOP");
 
 	    int no_old_lw_depend = 0;
             int is_depend        = 0;
@@ -420,14 +424,14 @@ int main(int argc, char **argv)
             //older_not_branch
             if(if_id_stage.older.type != ti_BRANCH){
                 older_not_branch = 1;
-                //debug_print("older_not_branch");
+                debug_print("older_not_branch");
             }
 
             //no_old_lw_depend
-            if(reg2_stage.dReg != if_id_stage.newer.sReg_a &&
-               reg2_stage.dReg != if_id_stage.newer.sReg_b){
+            if(reg2_stage.dReg != if_id_stage.older.sReg_a &&
+               reg2_stage.dReg != if_id_stage.older.sReg_b){
                 no_old_lw_depend = 1;
-                //debug_print("no_old_lw_depend");
+                debug_print("no_old_lw_depend");
             }
                 
             //no_lw_depend
@@ -435,7 +439,7 @@ int main(int argc, char **argv)
                reg2_stage.dReg != if_id_stage.newer.sReg_a &&
                reg2_stage.dReg != if_id_stage.newer.sReg_b){
                 no_lw_depend = 1;
-                //debug_print("no_lw_depend");
+                debug_print("no_lw_depend");
             }
 
             //is_depend
@@ -444,7 +448,7 @@ int main(int argc, char **argv)
                if_id_stage.older.dReg == if_id_stage.newer.sReg_a ||
                if_id_stage.older.dReg == if_id_stage.newer.sReg_b){
                 is_depend = 1;
-                //debug_print("is_depend");
+                debug_print("is_depend");
             }
 
             //one_of_each_inst
@@ -453,7 +457,7 @@ int main(int argc, char **argv)
                 ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) &&
                  (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE)) ){
                 one_of_each_inst = 1;
-                //debug_print("one_of_each_inst"); 
+                debug_print("one_of_each_inst"); 
             }
 
             
@@ -499,6 +503,7 @@ int main(int argc, char **argv)
 		    zero_buf(&reg2_stage, sizeof(reg2_stage));
 		}
 	        if_id_stage.older = if_id_stage.newer;
+                zero_buf(&if_id_stage.newer, sizeof(if_id_stage.newer));
 		if_id_buf_size -= 1;
 		
 	    } else{
@@ -510,6 +515,8 @@ int main(int argc, char **argv)
 
 
 	}
+        
+        
         
         /* Read new instructions */
         if(if_id_stage.newer.type == ti_NOP) {

@@ -24,11 +24,25 @@ static int trace_buf_ptr;
 static int trace_buf_end;
 static struct trace_item *trace_buf;
 
-typedef struct {
- unsigned int address;
- unsigned int was_branch_taken;
-} btb_entry;
-btb_entry btb_table[BTB_ENTRIES];
+short btb_table[BTB_ENTRIES];
+
+short get_btb_value(unsigned int address) {
+    // translate address
+    unsigned int mask = 127;
+    unsigned int index = (address >> 4) & mask;
+    
+    // lookup and return
+    return btb_table[index];
+}
+
+void set_btb_value(unsigned int address, int taken) {
+    // translate
+    unsigned int mask = 127;
+    unsigned int index = (address >> 4) & mask;
+
+    // lookup and set
+    btb_table[index] = (taken == 0) ? 0 : 1;
+}
 
 /* Helpers to read from trace into trace buffer */
 
@@ -249,6 +263,7 @@ int main(int argc, char **argv)
     zero_buf(&mem_stage);
     zero_buf(&wb_stage);
 
+    memset(&btb_table, 0, sizeof(short) * BTB_ENTRIES);
 
   int instructions_left = 5;  
   while(instructions_left) {

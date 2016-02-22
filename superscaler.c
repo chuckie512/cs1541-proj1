@@ -120,7 +120,7 @@ typedef struct inst_buffer {
 } inst_buffer;
 
 typedef struct queue_entry {
-    struct trace_item entry;
+    trace_item entry;
     struct queue_entry* next;
     struct queue_entry* prev;
 } queue_entry;
@@ -298,7 +298,79 @@ int main(int argc, char **argv)
         mem1_stage = ex1_stage;
         mem2_stage = ex1_stage;
 
-        /* DETECT/RESOLVE */
+
+
+
+        //detect
+        short squash = 0;
+        if(ex1_stage.type == ti_JTYPE ||
+           ex1_stage.type == ti_JRTYPE){
+            squash = 1;
+        }
+        if(ex1_stage.type == ti_BRANCH){  //ex1 is holding a branch
+            if(branch_prediction_method == 1){
+                if(ex1_stage.PC + 4 == reg1_stage.PC || 
+                   ex1_stage.PC + 4 == reg2_stage.PC ||
+                   ex1_stage.PC + 4 == if_id_stage.newer.PC){  //not taken
+                    if(get_btb_value(ex1_stage.PC) == 1){ //predict taken
+                        debug_print("[HAZARD] predicted taken when not taken");
+                        squash = 1;
+                        set_btb_value(ex1_stage.PC, 0);
+                    }
+                }
+                else{  //taken
+                    if(get_btb_value(ex1_stage.PC) == 0){ //predict not taken
+                        debug_print("[HAZARD] predict not taken when taken");
+                        squash = 1;
+                        set_btb_value(ex1_stage.PC, 1);
+                    } 
+                }
+            }
+            else{
+                if(!(ex1_stage.PC + 4 == reg1_stage.PC ||
+                     ex1_stage.PC + 4 == reg2_stage.PC ||
+                     ex1_stage.PC + 4 == if_id_stage.older.PC)){  //taken
+                    debug_print("[HAZARD] incorrect default (not taken) prediction");
+                    squash = 1;
+                }
+            }
+
+        }
+        if(squash == 1){
+            if(reg1_stage.type != ti_NOP){
+                if(reg2_stage.type != ti_NOP){
+                    if(reg1_stage.PC<reg2_stage.PC){
+                        add_queued_instruction(&reg1_stage);
+                        add_queued_instruction(&reg2_stage);
+                        zero_buf(&reg1_stage, sizeof(reg1_stage));
+                        zero_buf(&reg2_stage, sizeof(reg2_stage));
+                    }
+                    else{
+                        add_queued_instruction(&reg2_stage);
+                        add_queued_instruction(&reg1_stage);
+                        zero_buf(&reg2_stage, sizeof(reg2_stage));
+                        zero_buf(&reg1_stage, sizeof(reg1_stage));
+                    }
+                }
+                else{
+                    add_queued_instruction(&reg1_stage);
+                    zero_buf(&reg1_stage, sizeof(reg1_stage));
+                }
+            }
+            else if(reg2_stage.type != ti_NOP){
+                add_queued_instruction(&reg2_stage);
+                zero_buf(&reg2_stage, sizeof(reg2_stage));
+            }
+            if(if_id_stage.older.type != ti_NOP){
+                add_queued_instruction(&if_id_stage.older);
+                zero_buf(&if_id_stage.older, sizeof(if_id_stage.older));
+            }
+            if(if_id_stage.newer.type != ti_NOP){
+                add_queued_instruction(&if_id_stage.newer);
+                zero_buf(&if_id_stage.newer, sizeof(if_id_stage.newer));
+            }
+        }
+
 
         // step 5.5: reg -> ex
         ex1_stage = reg1_stage;

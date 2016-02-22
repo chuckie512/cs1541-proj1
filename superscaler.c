@@ -402,6 +402,7 @@ int main(int argc, char **argv)
 	    }
 
 	    if(issuetwo){
+                debug_print("issue two");
                 if(if_id_stage.newer.type == ti_LOAD ||
 		   if_id_stage.newer.type == ti_STORE){
                     reg2_stage = if_id_stage.newer;
@@ -413,6 +414,7 @@ int main(int argc, char **argv)
 		}
 		if_id_buf_size -= 2;
   	    } else if(issueone){
+                debug_print("issue one");
 		if(if_id_stage.older.type == ti_LOAD ||
 	           if_id_stage.older.type == ti_STORE){
                     reg2_stage = if_id_stage.older;
@@ -426,6 +428,7 @@ int main(int argc, char **argv)
 		if_id_buf_size -= 1;
 		
 	    } else{
+                debug_print("issue zero");
                 zero_buf(&reg1_stage, sizeof(reg1_stage));
 		zero_buf(&reg2_stage, sizeof(reg2_stage));
 	    }

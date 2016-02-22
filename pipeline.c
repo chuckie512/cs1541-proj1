@@ -318,11 +318,12 @@ int main(int argc, char **argv)
        * 1. Detect which case we're in
        * 2. Run that case
        */
-      
-    print_finished_instruction(&wb_stage, cycle_number);
+     
 
     cycle_number++;
-  
+ 
+    print_finished_instruction(&wb_stage, cycle_number);
+
     int hazard = 0;
     
     //detection of non-happy
@@ -346,50 +347,36 @@ int main(int argc, char **argv)
     wb_stage  = mem_stage;
     mem_stage = ex_stage; 
 
-    
-    if(1){ //forward
-        zero_buf(&ex_stage); 
-    }
-    if(1){ //branch no prediction/jump
-        add_queued_instruction(&id_stage);
-        add_queued_instruction(&if_stage);
-        zero_buf(&id_stage);
-        zero_buf(&if_stage);
-        
-        ex_stage = id_stage;
-        id_stage = if_stage;
-        read_instruction(&if_stage);
-        
-    }
-    if(1){ //branch bad prediction taken
-        add_queued_instruction(&id_stage);
-        add_queued_instruction(&if_stage);
-        zero_buf(&id_stage);
-        zero_buf(&if_stage);
+    switch(hazard) {
+        case 0: //happy path
+           ex_stage = id_stage;
+           id_stage = if_stage;
+           if(!read_instruction(&if_stage)) {
+               instructions_left--;
+               zero_buf(&if_stage);
+           }
+           break;
+           
+        case 1: //forward
+            zero_buf(&ex_stage); 
+            break;
+            
+        case 2: //branch resolve/jump resolve
+            add_queued_instruction(&id_stage);
+            add_queued_instruction(&if_stage);
+            zero_buf(&id_stage);
+            zero_buf(&if_stage);  
+            ex_stage = id_stage;
+            id_stage = if_stage;
+            if(!read_instruction(&if_stage)) {
+                instructions_left--;
+                zero_buf(&if_stage);
+            }
+            break;
 
-        ex_stage = id_stage;
-        id_stage = if_stage;
-        read_instruction(&if_stage);
-        
-        //predict[index] = 0;
-    
-    }
-    if(1){ //branch bad prediction not taken
-        add_queued_instruction(&id_stage);
-        add_queued_instruction(&if_stage);
-        zero_buf(&id_stage);
-        zero_buf(&if_stage);
-
-        ex_stage = id_stage;
-        id_stage = if_stage;
-        read_instruction(&if_stage);
-     
-        //predict[index] = 1;
-    }
-    if(1){ //happy path
-       ex_stage = id_stage;
-       id_stage = if_stage;
-       read_instruction(&if_stage);
+        default:
+           printf("fuck.\n");
+           exit(1);
     }
     
 

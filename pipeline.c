@@ -96,9 +96,38 @@ void debug_print(char * str){
   }
 }
 
+typedef struct queue_entry {
+    struct trace_item entry;
+    struct queue_entry* next;
+    struct queue_entry* prev;
+} queue_entry;
+queue_entry* queue_start = 0;
+queue_entry* queue_end   = 0;
+int inst_queue_size = 0;
+
 //other helper methods
 void zero_buf(struct trace_item* buf) {
     memset(buf, 0, sizeof(struct trace_item));
+}
+
+/* returns 0 if nothing left, 1 if there is something left */
+int read_instruction(struct trace_item* instruction) {
+    // the next instruction will either be what we read from the trace,
+    // or it will be one of the instructions following a branch.
+    // if it's from the branch, we will get the instruction from our
+    // queue of instructions that were backed up from a branch
+    if (inst_queue_size == 0) {
+        if (trace_get_item(&instruction)) {       /* no more instructions (trace_items) to simulate */
+            return 0;
+        }
+    }
+    else {
+        if(!get_queued_instruction(instruction)) {
+            return 0;
+        }
+    }
+    return 1;
+ 
 }
 
 print_finished_instruction(struct trace_item* inst, int cycle_number) {
@@ -140,15 +169,6 @@ print_finished_instruction(struct trace_item* inst, int cycle_number) {
       }
 }
 
-typedef struct queue_entry {
-    struct trace_item entry;
-    struct queue_entry* next;
-    struct queue_entry* prev;
-} queue_entry;
-queue_entry* queue_start = 0;
-queue_entry* queue_end   = 0;
-int inst_queue_size = 0;
-
 void add_queued_instruction(struct trace_item* inst) {
     queue_entry* new_entry = (queue_entry*) malloc(sizeof(queue_entry));
     new_entry->entry = *inst;
@@ -162,13 +182,16 @@ void add_queued_instruction(struct trace_item* inst) {
     inst_queue_size++;
 }
 
-struct trace_item get_queued_instruction() {
-    struct trace_item inst = queue_end->entry;
+int get_queued_instruction(struct trace_item* inst) {
+    if(queue_end == NULL) {
+        return 0;
+    }
+    *inst = queue_end->entry;
     queue_entry* new_end = queue_end->prev;
     free(queue_end);
     queue_end = new_end;
     inst_queue_size--;
-    return inst;
+    return 1;
 }
 
 int main(int argc, char **argv)
@@ -225,8 +248,10 @@ int main(int argc, char **argv)
     zero_buf(&ex_stage);
     zero_buf(&mem_stage);
     zero_buf(&wb_stage);
-  
-  while(1) {
+
+
+  int instructions_left = 5;  
+  while(instructions_left) {
 
   /*
    * We have 5 different things that can happen in the pipeline
@@ -280,9 +305,11 @@ int main(int argc, char **argv)
        */
       
     print_finished_instruction(&wb_stage, cycle_number);
+
     cycle_number++;
   
     //detection of non-happy
+
 
     wb_stage  = mem_stage;
     mem_stage = ex_stage; 
@@ -313,6 +340,7 @@ int main(int argc, char **argv)
         //if_stage = read
         
         //predict[index] = 0;
+    
     }
     if(1){ //branch bad prediction not taken
         add_queued_instruction(&id_stage);

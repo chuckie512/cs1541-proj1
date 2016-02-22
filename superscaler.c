@@ -296,7 +296,7 @@ int main(int argc, char **argv)
         wb1_stage = mem1_stage;
         wb2_stage = mem2_stage;
         mem1_stage = ex1_stage;
-        mem2_stage = ex1_stage;
+        mem2_stage = ex2_stage;
 
 
 
@@ -499,6 +499,7 @@ int main(int argc, char **argv)
 		    zero_buf(&reg2_stage, sizeof(reg2_stage));
 		}
 	        if_id_stage.older = if_id_stage.newer;
+                zero_buf(&if_id_stage.newer, sizeof(if_id_stage.newer));
 		if_id_buf_size -= 1;
 		
 	    } else{

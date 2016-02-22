@@ -295,6 +295,29 @@ int main(int argc, char **argv)
         mem1_stage = ex1_stage;
         mem2_stage = ex1_stage;
 
+        //detect
+        if(ex1_stage.type == ti_branch){  //ex1 is holding a branch
+            if(branch_prediction_method == 1){
+                if(ex1_stage.PC + 4 == reg1_stage.PC || 
+                   ex1_stage.PC + 4 == reg2_stage.PC ||
+                   ex1_stage.PC + 4 == if_id_stage.newer.PC){  //not taken
+                    if(get_btb_value(ex1_stage.PC) == 1){ //predict taken
+
+                    }
+                }
+                else{  //taken
+                    if(get_btb_value(ex1_stage.PC) == 0){ //predict not taken
+                
+                } 
+            }
+            else{
+                if(!(ex1_stage.PC + 4 == reg1_stage.PC ||
+                     ex1_stage.PC + 4 == reg2_stage.PC ||
+                     ex1_stage.PC + 4 == if_id_stage.newer.PC)){  //taken
+
+            }
+        }
+
         // step 5.5: reg -> ex
         ex1_stage = reg1_stage;
         ex2_stage = reg2_stage;

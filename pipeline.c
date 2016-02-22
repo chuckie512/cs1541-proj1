@@ -328,20 +328,35 @@ int main(int argc, char **argv)
     //detection of non-happy
     if(branch_prediction_method == 0 && ex_stage.type == ti_BRANCH){
         if(ex_stage.PC + 4 != id_stage.PC){
-            hazard = 2;  
+            hazard = 2; //incorrect no prediction
+            debug_print("[HAZARD] Incorrect default (not taken) prediciton\n");
         }
     }
-    else if(ex_stage.type == ti_JTYPE){
+    else if(ex_stage.type == ti_JTYPE|| ex_stage.type == ti_JRTYPE){
         hazard = 2;  //jump
+        debug_print("[HAZARD] jump\n");
     }
     else if(branch_prediction_method == 1 && ex_stage.type == ti_BRANCH){
-        
+        if(ex_stage.PC +4 == id_stage.PC){ // not taken
+            if(get_btb_value(ex_stage.PC) == 1){ //predict taken
+                hazard = 2; //branch
+                debug_print("[HAZARD] predicted taken when not taken\n");
+            }
+        }
+        else{ //taken
+            if(get_btb_value(ex_stage.PC) == 0){ //predict not taken
+                hazard = 2; //branch
+                debug_print("[HAZARD] predicted not taken when taken\n");
+            }
+        }
     }
     else if(ex_stage.type == ti_LOAD){
         if(ex_stage.dReg == id_stage.sReg_a || ex_stage.dReg == id_stage.sReg_b){
-            hazard = 1;
+            hazard = 1;  //forward
+            debug_print("[HAZARD] forward\n");
         }
     }
+
 
     wb_stage  = mem_stage;
     mem_stage = ex_stage; 

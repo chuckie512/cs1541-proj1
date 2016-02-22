@@ -308,8 +308,25 @@ int main(int argc, char **argv)
 
     cycle_number++;
   
+    int hazard = 0;
+    
     //detection of non-happy
-
+    if(branch_prediction_method == 0 && ex_stage.type == ti_BRANCH){
+        if(ex_stage.PC + 4 != id_stage.PC){
+            hazard = 2;  
+        }
+    }
+    else if(ex_stage.type == ti_JTYPE){
+        hazard = 2;  //jump
+    }
+    else if(branch_prediction_method == 1 && ex_stage.type == ti_BRANCH){
+        
+    }
+    else if(ex_stage.type == ti_LOAD){
+        if(ex_stage.dReg == id_stage.sReg_a || ex_stage.dReg == id_stage.sReg_b){
+            hazard = 1;
+        }
+    }
 
     wb_stage  = mem_stage;
     mem_stage = ex_stage; 

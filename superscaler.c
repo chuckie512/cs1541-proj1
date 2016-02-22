@@ -260,7 +260,8 @@ int main(int argc, char **argv)
 
     // store what instruction is in each stage of the pipeline (can be no-ops)
     inst_buffer if_id_stage;
-    inst_buffer reg_stage;
+    struct trace_item reg1_stage;
+    struct trace_item reg2_stage;
     struct trace_item ex1_stage;
     struct trace_item ex2_stage;
     struct trace_item mem1_stage;
@@ -268,7 +269,8 @@ int main(int argc, char **argv)
     struct trace_item wb1_stage;
     struct trace_item wb2_stage;
     zero_buf(&if_id_stage, sizeof(inst_buffer));
-    zero_buf(&reg_stage, sizeof(inst_buffer));
+    zero_buf(&reg1_stage, sizeof(struct trace_item));
+    zero_buf(&reg2_stage, sizeof(struct trace_item));
     zero_buf(&ex1_stage, sizeof(struct trace_item));
     zero_buf(&ex2_stage, sizeof(struct trace_item));
     zero_buf(&mem1_stage, sizeof(struct trace_item));
@@ -292,6 +294,11 @@ int main(int argc, char **argv)
         wb2_stage = mem2_stage;
         mem1_stage = ex1_stage;
         mem2_stage = ex1_stage;
+
+        // step 5.5: reg -> ex
+        ex1_stage = reg1_stage;
+        ex2_stage = reg2_stage;
+
     }
 
     printf("+ Simulation terminates at cycle : %u\n", cycle_number); 

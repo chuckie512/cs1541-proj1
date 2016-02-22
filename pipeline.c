@@ -15,7 +15,9 @@
 #define TRACE_BUFSIZE 1024*1024
 
 //set to 0 to disable debug prints
+#ifndef DEBUG
 #define DEBUG 1
+#endif
 
 #define BTB_ENTRIES 128
 
@@ -338,26 +340,6 @@ int main(int argc, char **argv)
                 debug_print("[HAZARD] Incorrect default (not taken) prediciton\n");
             }
         }
-<<<<<<< HEAD
-    }
-    else if(ex_stage.type == ti_JTYPE|| ex_stage.type == ti_JRTYPE){
-        hazard = 2;  //jump
-        debug_print("[HAZARD] jump\n");
-    }
-    else if(branch_prediction_method == 1 && ex_stage.type == ti_BRANCH){
-        if(ex_stage.PC +4 == id_stage.PC){ // not taken
-            if(get_btb_value(ex_stage.PC) == 1){ //predict taken
-                hazard = 2; //branch
-                debug_print("[HAZARD] predicted taken when not taken\n");
-                set_btb_value(ex_stage.PC, 0);
-            }
-        }
-        else{ //taken
-            if(get_btb_value(ex_stage.PC) == 0){ //predict not taken
-                hazard = 2; //branch
-                set_btb_value(ex_stage.PC, 1);
-                debug_print("[HAZARD] predicted not taken when taken\n");
-=======
         else if(ex_stage.type == ti_JTYPE|| ex_stage.type == ti_JRTYPE){
             hazard = 2;  //jump
             debug_print("[HAZARD] jump\n");
@@ -380,7 +362,6 @@ int main(int argc, char **argv)
             if(ex_stage.dReg == id_stage.sReg_a || ex_stage.dReg == id_stage.sReg_b){
                 hazard = 1;  //forward
                 debug_print("[HAZARD] forward\n");
->>>>>>> origin/joe-part1
             }
         }
 

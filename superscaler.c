@@ -305,19 +305,21 @@ int main(int argc, char **argv)
                     if(get_btb_value(ex1_stage.PC) == 1){ //predict taken
                         debug_print("[HAZARD] predicted taken when not taken");
                         squash = 1;
+                        set_btb_value(ex1_stage.PC, 0);
                     }
                 }
                 else{  //taken
                     if(get_btb_value(ex1_stage.PC) == 0){ //predict not taken
                         debug_print("[HAZARD] predict not taken when taken");
                         squash = 1;
+                        set_btb_value(ex1_stage.PC, 1);
                     } 
                 }
             }
             else{
                 if(!(ex1_stage.PC + 4 == reg1_stage.PC ||
                      ex1_stage.PC + 4 == reg2_stage.PC ||
-                     ex1_stage.PC + 4 == if_id_stage.newer.PC)){  //taken
+                     ex1_stage.PC + 4 == if_id_stage.older.PC)){  //taken
                     debug_print("[HAZARD] incorrect default (not taken) prediction");
                     squash = 1;
                 }
@@ -325,7 +327,31 @@ int main(int argc, char **argv)
 
             //squash
             if(squash == 1){
+                if(reg1_stage.type != ti_NOP){
+                    if(reg2_stage.type != ti_NOP){
+                        if(reg1_stage.PC<reg2_stage.PC){
+                            add_queued_instruction(&reg1_stage);
+                            add_queued_instruction(&reg2_stage);
+                        }
+                        else{
+                            add_queued_instruction(&reg2_stage);
+                            add_queued_instruction(&reg1_stage);
+                        }
+                    }
+                    else{
+                        add_queued_instruction(&reg1_stage);
+                    }
+                }
+                else if(reg2_stage.type != ti_NOP){
+                    add_queued_instruction(&reg2_stage);
+                }
 
+                if(if_id_stage.older.type != ti_NOP){
+                    add_queued_instruction(&if_id_stage.older);
+                }
+                if(if_id_stage.newer.type != ti_NOP){
+                    add_queued_instruction(&if_id_stage.newer);
+                }    
             }
         }
 

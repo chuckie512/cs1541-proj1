@@ -188,10 +188,13 @@ void add_queued_instruction(struct trace_item* inst) {
     new_entry->entry = *inst;
     new_entry->next = queue_start;
     new_entry->prev = 0;
-    queue_start->prev = new_entry;
+    queue_entry* old_start = queue_start;
     queue_start = new_entry;
     if (inst_queue_size == 0) {
         queue_end = queue_start;
+    }
+    else {
+        old_start->prev = queue_start;
     }
     inst_queue_size++;
 }

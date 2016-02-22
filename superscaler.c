@@ -428,8 +428,9 @@ int main(int argc, char **argv)
             }
 
             //no_old_lw_depend
-            if(reg2_stage.dReg != if_id_stage.older.sReg_a &&
-               reg2_stage.dReg != if_id_stage.older.sReg_b){
+            if((reg2_stage.dReg != if_id_stage.older.sReg_a &&
+                reg2_stage.dReg != if_id_stage.older.sReg_b) ||
+                reg2_stage.type != ti_LOAD){
                 no_old_lw_depend = 1;
                 debug_print("no_old_lw_depend");
             }
@@ -437,7 +438,8 @@ int main(int argc, char **argv)
             //no_lw_depend
             if(no_old_lw_depend &&
                reg2_stage.dReg != if_id_stage.newer.sReg_a &&
-               reg2_stage.dReg != if_id_stage.newer.sReg_b){
+               reg2_stage.dReg != if_id_stage.newer.sReg_b ||
+               reg2_stage.type != ti_LOAD){
                 no_lw_depend = 1;
                 debug_print("no_lw_depend");
             }

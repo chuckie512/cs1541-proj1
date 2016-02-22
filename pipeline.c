@@ -326,7 +326,7 @@ int main(int argc, char **argv)
         
         ex_stage = id_stage;
         id_stage = if_stage;
-        //if_stage = read
+        read_instruction(&if_stage);
         
     }
     if(1){ //branch bad prediction taken
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
 
         ex_stage = id_stage;
         id_stage = if_stage;
-        //if_stage = read
+        read_instruction(&if_stage);
         
         //predict[index] = 0;
     
@@ -350,14 +350,14 @@ int main(int argc, char **argv)
 
         ex_stage = id_stage;
         id_stage = if_stage;
-        //if_stage = read
+        read_instruction(&if_stage);
      
         //predict[index] = 1;
     }
     if(1){ //happy path
        ex_stage = id_stage;
        id_stage = if_stage;
-       // if_stage = read 
+       read_instruction(&if_stage);
     }
     
 

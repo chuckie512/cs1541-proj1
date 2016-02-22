@@ -435,25 +435,19 @@ int main(int argc, char **argv)
 	}
         
         /* Read new instructions */
-        if(if_id_buf_size == 1) {
+        if(if_id_stage.newer.type == ti_NOP) {
+            struct trace_item temp = {};
+            if(read_instruction(&temp)) {
+                if_id_stage.newer = temp;
+            }
+        }
+        if(if_id_stage.older.type == ti_NOP) {
             if_id_stage.older = if_id_stage.newer;
             struct trace_item temp = {};
             if(read_instruction(&temp)) {
                 if_id_stage.newer = temp;
-                if_id_buf_size = 2;
             }
-        }
-        else if(if_id_buf_size == 0) {
-            struct trace_item temp = {};
-            if(read_instruction(&temp)) {
-                if_id_buf_size = 1;
-                if_id_stage.older = temp;
-                if(read_instruction(&temp)) {
-                    if_id_stage.newer = temp;
-                    if_id_buf_size = 2;
-                }
-            }
-        }
+        } 
     }
 
     printf("+ Simulation terminates at cycle : %u\n", cycle_number); 

@@ -296,24 +296,35 @@ int main(int argc, char **argv)
         mem2_stage = ex1_stage;
 
         //detect
-        if(ex1_stage.type == ti_branch){  //ex1 is holding a branch
+        if(ex1_stage.type == ti_BRANCH){  //ex1 is holding a branch
+            short squash = 0;
             if(branch_prediction_method == 1){
                 if(ex1_stage.PC + 4 == reg1_stage.PC || 
                    ex1_stage.PC + 4 == reg2_stage.PC ||
                    ex1_stage.PC + 4 == if_id_stage.newer.PC){  //not taken
                     if(get_btb_value(ex1_stage.PC) == 1){ //predict taken
-
+                        debug_print("[HAZARD] predicted taken when not taken");
+                        squash = 1;
                     }
                 }
                 else{  //taken
                     if(get_btb_value(ex1_stage.PC) == 0){ //predict not taken
-                
-                } 
+                        debug_print("[HAZARD] predict not taken when taken");
+                        squash = 1;
+                    } 
+                }
             }
             else{
                 if(!(ex1_stage.PC + 4 == reg1_stage.PC ||
                      ex1_stage.PC + 4 == reg2_stage.PC ||
                      ex1_stage.PC + 4 == if_id_stage.newer.PC)){  //taken
+                    debug_print("[HAZARD] incorrect default (not taken) prediction");
+                    squash = 1;
+                }
+            }
+
+            //squash
+            if(squash == 1){
 
             }
         }

@@ -296,8 +296,12 @@ int main(int argc, char **argv)
         mem2_stage = ex1_stage;
 
         //detect
+        short squash = 0;
+        if(ex1_stage.type == ti_JTYPE ||
+           ex1_stage.type == ti_JRTYPE){
+            squash = 1;
+        }
         if(ex1_stage.type == ti_BRANCH){  //ex1 is holding a branch
-            short squash = 0;
             if(branch_prediction_method == 1){
                 if(ex1_stage.PC + 4 == reg1_stage.PC || 
                    ex1_stage.PC + 4 == reg2_stage.PC ||
@@ -325,33 +329,39 @@ int main(int argc, char **argv)
                 }
             }
 
-            //squash
-            if(squash == 1){
-                if(reg1_stage.type != ti_NOP){
-                    if(reg2_stage.type != ti_NOP){
-                        if(reg1_stage.PC<reg2_stage.PC){
-                            add_queued_instruction(&reg1_stage);
-                            add_queued_instruction(&reg2_stage);
-                        }
-                        else{
-                            add_queued_instruction(&reg2_stage);
-                            add_queued_instruction(&reg1_stage);
-                        }
+        }
+        if(squash == 1){
+            if(reg1_stage.type != ti_NOP){
+                if(reg2_stage.type != ti_NOP){
+                    if(reg1_stage.PC<reg2_stage.PC){
+                        add_queued_instruction(&reg1_stage);
+                        add_queued_instruction(&reg2_stage);
+                        zero_buf(&reg1_stage, sizeof(reg1_stage));
+                        zero_buf(&reg2_stage, sizeof(reg2_stage));
                     }
                     else{
+                        add_queued_instruction(&reg2_stage);
                         add_queued_instruction(&reg1_stage);
+                        zero_buf(&reg2_stage, sizeof(reg2_stage));
+                        zero_buf(&reg1_stage, sizeof(reg1_stage));
                     }
                 }
-                else if(reg2_stage.type != ti_NOP){
-                    add_queued_instruction(&reg2_stage);
+                else{
+                    add_queued_instruction(&reg1_stage);
+                    zero_buf(&reg1_stage, sizeof(reg1_stage));
                 }
-
-                if(if_id_stage.older.type != ti_NOP){
-                    add_queued_instruction(&if_id_stage.older);
-                }
-                if(if_id_stage.newer.type != ti_NOP){
-                    add_queued_instruction(&if_id_stage.newer);
-                }    
+            }
+            else if(reg2_stage.type != ti_NOP){
+                add_queued_instruction(&reg2_stage);
+                zero_buf(&reg2_stage, sizeof(reg2_stage));
+            }
+            if(if_id_stage.older.type != ti_NOP){
+                add_queued_instruction(&if_id_stage.older);
+                zero_buf(&if_id_stage.older, sizeof(if_id_stage.older));
+            }
+            if(if_id_stage.newer.type != ti_NOP){
+                add_queued_instruction(&if_id_stage.newer);
+                zero_buf(&if_id_stage.newer, sizeof(if_id_stage.newer));
             }
         }
 

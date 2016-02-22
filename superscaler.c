@@ -120,7 +120,7 @@ typedef struct inst_buffer {
 } inst_buffer;
 
 typedef struct queue_entry {
-    trace_item entry;
+    struct trace_item entry;
     struct queue_entry* next;
     struct queue_entry* prev;
 } queue_entry;

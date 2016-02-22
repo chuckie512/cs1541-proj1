@@ -304,99 +304,179 @@ int main(int argc, char **argv)
        * 2. Run that case
        */
       
-
-  {
-    if(!read_instruction(&new_instruction)) {
-        instructions_left--;
-    }
-    cycle_number++;
-    
-   /* Happy-path case */
-    // in the happy case, everything moves down the pipeline
-    if(trace_view_on) {
-        print_finished_instruction(&wb_stage, cycle_number);
-    }
-    wb_stage = mem_stage;
-    mem_stage = ex_stage;
-    ex_stage = id_stage;
-    id_stage = if_stage;
-    if_stage = new_instruction;
-  }
-
-    /* Jump cases */
-  {
-        if(!read_instruction(&new_instruction)) {
-            instructions_left--;
-        }
-    cycle_number++;
-    
-    add_queued_instruction(&id_stage);
-    add_queued_instruction(&if_stage);
-    zero_buf(&id_stage);
-    zero_buf(&if_stage);
     print_finished_instruction(&wb_stage, cycle_number);
-    wb_stage = mem_stage;
-    mem_stage = ex_stage;
-    ex_stage = id_stage;
-    id_stage = if_stage;
-    if_stage = new_instruction;
-  }
-  
-    /* Forwarding case */
-  {
-    if(1) {
-        print_finished_instruction(&wb_stage, cycle_number);
-        wb_stage = mem_stage;
-        mem_stage = ex_stage;
-        zero_buf(&ex_stage);
-    }
+
     cycle_number++;
-  }
   
-    /* Branching with assume not taken */
-  {
-    if (1) {
+    //detection of non-happy
+
+
+    wb_stage  = mem_stage;
+    mem_stage = ex_stage; 
+
+    
+    if(1){ //forward
+        zero_buf(&ex_stage); 
+    }
+    if(1){ //branch no prediction/jump
         add_queued_instruction(&id_stage);
         add_queued_instruction(&if_stage);
         zero_buf(&id_stage);
         zero_buf(&if_stage);
-        print_finished_instruction(&wb_stage, cycle_number);
-        wb_stage = mem_stage;
-        mem_stage = ex_stage;
+        
         ex_stage = id_stage;
         id_stage = if_stage;
-        if_stage = new_instruction;
+        //if_stage = read
+        
     }
-    cycle_number++;
-  }
+    if(1){ //branch bad prediction taken
+        add_queued_instruction(&id_stage);
+        add_queued_instruction(&if_stage);
+        zero_buf(&id_stage);
+        zero_buf(&if_stage);
+
+        ex_stage = id_stage;
+        id_stage = if_stage;
+        //if_stage = read
+        
+        //predict[index] = 0;
+    
+    }
+    if(1){ //branch bad prediction not taken
+        add_queued_instruction(&id_stage);
+        add_queued_instruction(&if_stage);
+        zero_buf(&id_stage);
+        zero_buf(&if_stage);
+
+        ex_stage = id_stage;
+        id_stage = if_stage;
+        //if_stage = read
+     
+        //predict[index] = 1;
+    }
+    if(1){ //happy path
+       ex_stage = id_stage;
+       id_stage = if_stage;
+       // if_stage = read 
+    }
+    
+
+
   
-    /* Branching with 1-bit predictor */
-  {
-    if(1) {
-        if(1) {
-            add_queued_instruction(&id_stage);
-            add_queued_instruction(&if_stage);
-            // update BTB
-            zero_buf(&id_stage);
-            zero_buf(&if_stage);
-            print_finished_instruction(&wb_stage, cycle_number);
-            wb_stage = mem_stage;
-            mem_stage = ex_stage;
-            ex_stage = id_stage;
-            id_stage = if_stage;
-            if_stage = new_instruction;
-        }
-    }
-    if(1) {
-        if(1) {
 
-        }
-        else {
 
-        }
-    }
-    cycle_number++;
-  }
+  //{
+  //  // the next instruction will either be what we read from the trace,
+  //  // or it will be one of the instructions following a branch.
+  //  // if it's from the branch, we will get the instruction from our
+  //  // queue of instructions that were backed up from a branch
+  //  if (inst_queue_size == 0) {
+  //      size = trace_get_item(&tr_entry);
+  //      if (!size) {       /* no more instructions (trace_items) to simulate */
+  //          printf("+ Simulation terminates at cycle : %u\n", cycle_number);
+  //          break;
+  //      }
+  //      new_instruction = *tr_entry;
+  //  }
+  //  else {
+  //      new_instruction = get_queued_instruction();
+  //  }
+  //  cycle_number++;
+  //  
+  // /* Happy-path case */
+  //  // in the happy case, everything moves down the pipeline
+  //  if(trace_view_on) {
+  //      print_finished_instruction(&wb_stage, cycle_number);
+  //  }
+  //  wb_stage = mem_stage;
+  //  mem_stage = ex_stage;
+  //  ex_stage = id_stage;
+  //  id_stage = if_stage;
+  //  if_stage = new_instruction;
+  //}
+
+  //  /* Jump cases */
+  //{
+  //  if (inst_queue_size == 0) {
+  //      size = trace_get_item(&tr_entry);
+  //      if (!size) {       /* no more instructions (trace_items) to simulate */
+  //          printf("+ Simulation terminates at cycle : %u\n", cycle_number);
+  //          break;
+  //      }
+  //      new_instruction = *tr_entry;
+  //  }
+  //  else {
+  //      new_instruction = get_queued_instruction();
+  //  }
+  //  cycle_number++;
+  //  
+  //  add_queued_instruction(&id_stage);
+  //  add_queued_instruction(&if_stage);
+  //  zero_buf(&id_stage);
+  //  zero_buf(&if_stage);
+  //  print_finished_instruction(&wb_stage, cycle_number);
+  //  wb_stage = mem_stage;
+  //  mem_stage = ex_stage;
+  //  ex_stage = id_stage;
+  //  id_stage = if_stage;
+  //  if_stage = new_instruction;
+  //}
+  //
+  //  /* Forwarding case */
+  //{
+  //  if(1) {
+  //      print_finished_instruction(&wb_stage, cycle_number);
+  //      wb_stage = mem_stage;
+  //      mem_stage = ex_stage;
+  //      zero_buf(&ex_stage);
+  //  }
+  //  cycle_number++;
+  //}
+  //
+  //  /* Branching with assume not taken */
+  //{
+  //  if (1) {
+  //      add_queued_instruction(&id_stage);
+  //      add_queued_instruction(&if_stage);
+  //      zero_buf(&id_stage);
+  //      zero_buf(&if_stage);
+  //      print_finished_instruction(&wb_stage, cycle_number);
+  //      wb_stage = mem_stage;
+  //      mem_stage = ex_stage;
+  //      ex_stage = id_stage;
+  //      id_stage = if_stage;
+  //      if_stage = new_instruction;
+  //  }
+  //  cycle_number++;
+  //}
+  //
+  //  /* Branching with 1-bit predictor */
+  //{
+  //  if(1) {
+  //      if(1) {
+  //          add_queued_instruction(&id_stage);
+  //          add_queued_instruction(&if_stage);
+  //          // update BTB
+  //          zero_buf(&id_stage);
+  //          zero_buf(&if_stage);
+  //          print_finished_instruction(&wb_stage, cycle_number);
+  //          wb_stage = mem_stage;
+  //          mem_stage = ex_stage;
+  //          ex_stage = id_stage;
+  //          id_stage = if_stage;
+  //          if_stage = new_instruction;
+  //      }
+  //  }
+  //  if(1) {
+  //      if(1) {
+
+  //      }
+  //      else {
+
+  //      }
+  //  }
+  //  cycle_number++;
+  //}
     // so we went about this wrong at first
     // each stage is not actually calculating anything, just tracing
     // so have a debug print of what's in them, but don't worry about the alu

@@ -28,11 +28,11 @@ CPI           | sample | sample 1 | sample 2 | sample 3 | sample 4 | sample_larg
 --------------+--------+----------+----------+----------+----------+---------------+---------------+---------------+---------+
 pipeline NT   |  1.282 | 1.437881 | 1.346443 | 1.515222 | 1.433179 |   1.345238285 |   1.509623835 |   1.338823508 | 1.40105 |
 --------------+--------+----------+----------+----------+----------+---------------+---------------+---------------+---------+
-pipeline 1bit |  1.240 | 1.227375 | 1.312353 | 1.454750 | 1.331493 |     1.2297796 |   1.395687119 |   1.275590374 | 1.30838 |
+pipeline 1bit |  1.240 | 1.227375 | 1.312353 | 1.454750 | 1.331493 |   1.2297796   |   1.395687119 |   1.275590374 | 1.30838 |
 --------------+--------+----------+----------+----------+----------+---------------+---------------+---------------+---------+
 super NT      |  1.232 | 1.403783 | 1.274702 | 1.466214 | 1.381563 |   1.261888722 |   1.466235696 |   1.273801808 | 1.34502 |
 --------------+--------+----------+----------+----------+----------+---------------+---------------+---------------+---------+
-super 1bit    |  1.190 | 1.193279 | 1.240613 | 1.405742 | 1.279878 |   1.146426547 |    1.35229898 |   1.210514486 | 1.25234 |
+super 1bit    |  1.190 | 1.193279 | 1.240613 | 1.405742 | 1.279878 |   1.146426547 |   1.35229898  |   1.210514486 | 1.25234 |
 --------------+--------+----------+----------+----------+----------+---------------+---------------+---------------+---------+
 
 Adding a 1-bit branch predictor over assuming a branch isn't taken gives us a
@@ -43,4 +43,6 @@ improved predictions most likely comes from loops within the traces.
 
 Changing from a single pipeline to two pipelines gave a 4% increase in CPI for
 the assume not taken predictor, and a 4% increase in CPI for the 1-bit
-predictor. This improvement likely comes from ?
+predictor. This improvement likely comes from the issue two case.  The issuer
+will not issue any worse than the single pipline, but in certain cases allows
+two instrucitons to be calculated at the same time.  

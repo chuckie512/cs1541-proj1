@@ -124,6 +124,7 @@ typedef struct queue_entry {
     struct queue_entry* next;
     struct queue_entry* prev;
 } queue_entry;
+
 queue_entry* queue_start = 0;
 queue_entry* queue_end   = 0;
 int inst_queue_size = 0;
@@ -391,32 +392,6 @@ int main(int argc, char **argv)
             int issuetwo = 0;
             int issueone = 0;
 
-
-
-
-
-            //logic
-            //            if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) && 
-            //                 (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)  ) || 
-            //                ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) && 
-            //                 (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE) )) {
-            //		if(if_id_stage.older.type != ti_BRANCH) {
-            //			if(!((if_id_stage.newer.dReg == if_id_stage.older.sReg_a || if_id_stage.newer.dReg == if_id_stage.older.sReg_b)||
-            //			      if_id_stage.older.dReg == if_id_stage.newer.sReg_a || if_id_stage.older.dReg == if_id_stage.newer.sReg_b  )){
-            //				if(reg2_stage.type == ti_LOAD &&
-            //				   (reg2_stage.dReg != if_id_stage.newer.sReg_a && reg2_stage.dReg != if_id_stage.newer.sReg_b &&
-            //				    reg2_stage.dReg != if_id_stage.older.sReg_a && reg2_stage.dReg != if_id_stage.older.sReg_b )){
-            //					issuetwo = 1;
-            //				}
-            //			}
-            //		}	
-            //	    }
-            //            else if( reg2_stage.type != ti_LOAD ||
-            //		    (if_id_stage.older.sReg_a != reg2_stage.dReg &&
-            //		     if_id_stage.older.sReg_b != reg2_stage.dReg )){
-            //                issueone = 1;
-            //	    }
-
             if(if_id_stage.newer.type != ti_NOP)
                 debug_print("newer not NOP");
             if(if_id_stage.older.type != ti_NOP)
@@ -436,7 +411,7 @@ int main(int argc, char **argv)
 
             //no_old_lw_depend
             if((reg2_stage.dReg != if_id_stage.older.sReg_a &&
-                        reg2_stage.dReg != if_id_stage.older.sReg_b) ||
+                    reg2_stage.dReg != if_id_stage.older.sReg_b) ||
                     reg2_stage.type != ti_LOAD){
                 no_old_lw_depend = 1;
                 debug_print("no_old_lw_depend");
@@ -462,8 +437,8 @@ int main(int argc, char **argv)
 
             //one_of_each_inst
             if( ((if_id_stage.newer.type == ti_LOAD || if_id_stage.newer.type == ti_STORE) &&
-                        (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)) ||
-                    ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE) &&
+                     (if_id_stage.older.type != ti_LOAD && if_id_stage.older.type != ti_STORE)) ||
+                    ((if_id_stage.older.type == ti_LOAD || if_id_stage.older.type == ti_STORE)  &&
                      (if_id_stage.newer.type != ti_LOAD && if_id_stage.newer.type != ti_STORE)) ){
                 one_of_each_inst = 1;
                 debug_print("one_of_each_inst"); 
@@ -514,17 +489,12 @@ int main(int argc, char **argv)
                 if_id_stage.older = if_id_stage.newer;
                 zero_buf(&if_id_stage.newer, sizeof(if_id_stage.newer));
                 if_id_buf_size -= 1;
-
             } else{
                 debug_print("issue zero");
                 zero_buf(&reg1_stage, sizeof(reg1_stage));
                 zero_buf(&reg2_stage, sizeof(reg2_stage));
             }
-
-
-
         }
-
 
 
         /* Read new instructions */

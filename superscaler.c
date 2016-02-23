@@ -26,6 +26,7 @@ static int trace_buf_ptr;
 static int trace_buf_end;
 static struct trace_item *trace_buf;
 
+//for branch predictions
 short btb_table[BTB_ENTRIES];
 
 short get_btb_value(unsigned int address) {
@@ -36,6 +37,7 @@ short get_btb_value(unsigned int address) {
     // lookup and return
     return btb_table[index];
 }
+
 
 void set_btb_value(unsigned int address, int taken) {
     // translate
@@ -58,11 +60,13 @@ int is_big_endian(void)
     return bint.c[0] == 1; 
 }
 
+
 uint32_t my_ntohl(uint32_t x)
 {
     u_char *s = (u_char *)&x;
     return (uint32_t)(s[3] << 24 | s[2] << 16 | s[1] << 8 | s[0]);
 }
+
 
 void trace_init()
 {
@@ -106,13 +110,16 @@ int trace_get_item(struct trace_item *item)
     return 1;
 }
 
+//allows for more verbose prints
 void debug_print(char * str){
     if(DEBUG>0){
         printf("%s\n", str);
     }
 }
 
+
 int if_id_buf_size = 0;
+
 
 typedef struct inst_buffer {
     struct trace_item older;
@@ -155,6 +162,7 @@ int read_instruction(struct trace_item* instruction) {
     return 1;
 
 }
+
 
 print_finished_instruction(struct trace_item* inst, int cycle_number, int alu_or_mem) {
     if(alu_or_mem) {
@@ -297,6 +305,8 @@ int main(int argc, char **argv)
     memset(&btb_table, 0, sizeof(short) * BTB_ENTRIES);
     int empty_if_id_buffer = 1;
     int inst_left = 6;
+
+
     while(trace_nonempty || inst_queue_size || !empty_if_id_buffer || inst_left) {
 
         cycle_number++;
@@ -310,9 +320,6 @@ int main(int argc, char **argv)
         wb2_stage = mem2_stage;
         mem1_stage = ex1_stage;
         mem2_stage = ex2_stage;
-
-
-
 
         //detect
         short squash = 0;
@@ -386,13 +393,11 @@ int main(int argc, char **argv)
             if_id_buf_size = 0;
         }
 
-
         // step 5.5: reg -> ex
         ex1_stage = reg1_stage;
         ex2_stage = reg2_stage;
 
         /* ISSUE */
-
         if(!squash){
             int issuetwo = 0;
             int issueone = 0;
@@ -517,6 +522,7 @@ int main(int argc, char **argv)
             }
         }
 
+        /* check end conditons */
         empty_if_id_buffer = (if_id_stage.newer.type == ti_NOP && if_id_stage.older.type == ti_NOP);
         if(empty_if_id_buffer) inst_left--;
     }

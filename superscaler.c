@@ -238,26 +238,31 @@ int main(int argc, char **argv)
     unsigned int cycle_number = 0;
 
     // Parse Inputs
-    if (argc != 4) {
+    if (argc == 2) {
+        trace_file_name = argv[1];
+        trace_view_on = 0;
+        branch_prediction_method = 0;
+    } else if (argc == 4) {
+        trace_file_name = argv[1];
+        trace_view_on = atoi(argv[2]);
+        branch_prediction_method = (atoi(argv[3]) == 1) ? 1 : 0;
+    }
+    else {
         fprintf(stdout, "\nUSAGE: tv <trace_file> <switch - any character> <branch_prediction - 0|1>\n");
         fprintf(stdout, "\n(switch) to turn on or off individual item view.\n");
         fprintf(stdout, "(branch_prediction) sets the branch prediction method as \'assume not taken\' (0), or a 1-bit branch predictor (1)\n\n");
         exit(0);
-    } else {
-        trace_file_name = argv[1];
-        trace_view_on = atoi(argv[2]);
-        branch_prediction_method = (atoi(argv[3]) == 1) ? 1 : 0;
-
-        // debug
-        char dbg_msg[200];
-        sprintf(dbg_msg,
-                "\n-debug- parsed inputs. file=%s, view_trace=%d, branch_pred=%d\n",
-                trace_file_name,
-                (trace_view_on == 0) ? 0 : 1,
-                (branch_prediction_method == 0) ? 0 : 1
-               );
-        debug_print(dbg_msg);
     }
+
+    // debug
+    char dbg_msg[200];
+    sprintf(dbg_msg,
+            "\n-debug- parsed inputs. file=%s, view_trace=%d, branch_pred=%d\n",
+            trace_file_name,
+            (trace_view_on == 0) ? 0 : 1,
+            (branch_prediction_method == 0) ? 0 : 1
+           );
+    debug_print(dbg_msg);
 
     // Open the trace file.
     fprintf(stdout, "\n ** opening file %s\n", trace_file_name);
